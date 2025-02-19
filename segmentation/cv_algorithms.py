@@ -4,6 +4,11 @@ from matplotlib import pyplot as plt
 
 
 def detect_cell_cv2(image_path, increase_channel=None):
+    """
+    Function for cells detection in micro (small squares)
+    :param image_path: string with .jpg file path
+    :param increase_channel: int with number of channel for increasing values
+    """
     img = cv2.imread(image_path)
     chnls = cv2.split(img)
 
@@ -36,21 +41,86 @@ def detect_cell_cv2(image_path, increase_channel=None):
         for i in circles[0, :]:
             cv2.circle(img, (i[0], i[1]), i[2], (255, 0, 0), 5)
 
-    cells_area = np.round(np.sum(circles[0, :, 2] ** 2 * np.pi), 3)
-    cells_mean_rad = int(np.round(np.mean(circles[0, :, 2])))
-    plt.title(f'Full image cell number = {circles.shape[1]}\n'
-              f'full cells area = {cells_area}\n'
-              f'mean cell radius = {cells_mean_rad}')
+        cells_area = np.round(np.sum(circles[0, :, 2] ** 2 * np.pi), 3)
+        cells_mean_rad = int(np.round(np.mean(circles[0, :, 2])))
+        plt.title(f'Full image cell number = {circles.shape[1]}\n'
+                  f'full cells area = {cells_area}\n'
+                  f'mean cell radius = {cells_mean_rad}')
 
-    inds = np.arange(circles.shape[1])
-    for ind in inds:
-        plt.annotate(ind, (circles[0, ind, 0], circles[0, ind, 1]), c='blue', fontsize=9)
-    plt.imshow(img)
-    plt.tight_layout()
+        inds = np.arange(circles.shape[1])
+        for ind in inds:
+            plt.annotate(ind, (circles[0, ind, 0], circles[0, ind, 1]), c='blue', fontsize=9)
+        plt.imshow(img)
+        plt.tight_layout()
+        plt.show()
+    else:
+        print('Failed')
+
+
+def detect_cell_cv2_macro(image_path, increase_channel=None):
+    """
+    TODO
+    Test function for cells detection in macro (near full glass)
+    :param image_path: string with .jpg file path
+    :param increase_channel: int with number of channel for increasing values
+    """
+    img = cv2.imread(image_path)
+    chnls = cv2.split(img)
+
+    if increase_channel is not None:
+        clahe = cv2.createCLAHE(clipLimit=2.0, tileGridSize=(8, 8))
+        cl = clahe.apply(chnls[increase_channel])
+        new_chs = []
+        for i, c in enumerate(chnls):
+            if i != increase_channel:
+                new_chs.append(c)
+            else:
+                new_chs.append(cl)
+        img = cv2.merge(new_chs)
+
+    gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
+    blurred = cv2.medianBlur(gray, 1)
+    plt.imshow(blurred)
     plt.show()
+
+    minDist = 1
+    param1 = 1
+    param2 = 1  #smaller value-> more false circles
+    minRadius = 1
+    maxRadius = 5
+
+    circles = cv2.HoughCircles(blurred, cv2.HOUGH_GRADIENT, 1, minDist, param1=param1, param2=param2,
+                               minRadius=minRadius, maxRadius=maxRadius)
+    print(f'Found {circles.shape} circles')
+    plt.rcParams['figure.figsize'] = (8, 6)
+    if circles is not None:
+        circles = np.uint16(np.around(circles))
+        for i in circles[0, :]:
+            cv2.circle(img, (i[0], i[1]), i[2], (255, 0, 0), 5)
+
+        cells_area = np.round(np.sum(circles[0, :, 2] ** 2 * np.pi), 3)
+        cells_mean_rad = int(np.round(np.mean(circles[0, :, 2])))
+        plt.title(f'Full image cell number = {circles.shape[1]}\n'
+                  f'full cells area = {cells_area}\n'
+                  f'mean cell radius = {cells_mean_rad}')
+
+        inds = np.arange(circles.shape[1])
+        for ind in inds:
+            plt.annotate(ind, (circles[0, ind, 0], circles[0, ind, 1]), c='blue', fontsize=9)
+        plt.imshow(img)
+        plt.tight_layout()
+        plt.show()
+
+    else:
+        print('Failed')
 
 
 def detect_edges(image_path):
+    """
+    TODO
+    Test function for detection squares grid lines with CV methods
+    :param image_path: string with .jpg file path
+    """
     img = cv2.imread(image_path)
     gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
     plt.imshow(gray, cmap='Grays')
@@ -73,4 +143,4 @@ def detect_edges(image_path):
 
 
 
-detect_edges('../photo_data/1/BG-11C-6625-01-14-16-08-54.jpg')
+detect_cell_cv2('../photo_data/1/BG-11C-6625-01-14-16-07-36.jpg')

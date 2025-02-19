@@ -1,7 +1,7 @@
 import pandas as pd
 from matplotlib import pyplot as plt
 
-df = pd.read_csv('phases_data/microalgae_data_envs.csv')
+df = pd.read_csv('growth_phases_data/microalgae_data_envs.csv')
 
 envs = df['Среда'].unique()
 
