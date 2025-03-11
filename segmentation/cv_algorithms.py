@@ -173,4 +173,4 @@ def detect_edges(image_path):
     plt.show()
 
 
-#detect_cell_cv2('../photo_data/raw/BG-11C-6625-01-14-16-07-36.jpg')
+detect_cell_cv2('C:/Projects/microalgae/segmentation/data/raw/BG-11-1-25-02-25-20-07-27.png')
