@@ -1,3 +1,7 @@
 validation/ 
-segmentation/data/
+segmentation/data/cellpose_result/
+segmentation/data/marked
+segmentation/data/raw
+segmentation/data/raw_jpg
+segmentation/data/validation_cellpose/images/
 

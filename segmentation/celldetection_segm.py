@@ -1,4 +1,4 @@
-from cellpose import models
+import celldetection as cd
 import cv2
 import numpy as np
 import os
@@ -7,69 +7,27 @@ import matplotlib.pyplot as plt
 from copy import deepcopy
 from cv_algorithms import detect_cv2_objs
 
-def iou(predicted, target):
+def detect_cell_celldetection(image_path):
     """
-    Return intersection over union metric for two classes (classic)
-    """
-    predicted = deepcopy(predicted)
-    target = deepcopy(target)
-
-    predicted[predicted != 0] = 1
-    target[target != 0] = 1
-    diff = predicted - target
-    tp = np.sum(diff == 0)
-    fp = np.sum(diff == 1)
-    fn = np.sum(diff == -1)
-    return np.round(tp / (tp + fp + fn), 3)
-
-def iou_one_class(predicted, target):
-    """
-        Return intersection over union metric for one class (only cells)
-    """
-    predicted = deepcopy(predicted)
-    target = deepcopy(target)
-
-    predicted[predicted != 0] = 1
-    target[target != 0] = 1
-
-    diff = predicted - target
-    tp = np.sum(diff == 0)
-    fp = np.sum(diff == 1)
-    return np.round(tp / (tp + fp), 3)
-
-def area_error(predicted, target, percent=True):
-    predicted = deepcopy(predicted)
-    target = deepcopy(target)
-
-    predicted[predicted != 0] = 1
-    target[target != 0] = 1
-
-    if percent:
-        return np.round(abs(np.sum(predicted) - np.sum(target))/np.sum(target), 3)
-    else:
-        return abs(np.sum(predicted) - np.sum(target))
-
-def detect_cell_cellpose(image_path):
-    """
-    Выполняет сегментацию клеток на изображении с помощью модели Cellpose.
+    Выполняет сегментацию клеток на изображении с помощью celldetection.
     """
     # Загружаем изображение
-    img = cv2.imread(image_path)
-    img = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)  # Преобразуем в градации серого
+    img = cv2.imread(image_path, cv2.IMREAD_GRAYSCALE)
 
-    # Загружаем предобученную модель Cellpose
-    model = models.Cellpose(model_type='cyto3')  # Можно попробовать 'nuclei' или 'bact'
+    # Создаём модель celldetection
+    model = cd.models.CellDetector()  # Использует предобученную модель
 
-    # Запускаем сегментацию
-    masks, flows, styles, diams = model.eval(img, diameter=None, channels=[0, 0])
-
+    # Выполняем детекцию
+    instances = model.detect_instances(img)
+    
     # Создаём бинарную маску
     mask = np.zeros_like(img)
-    mask[masks > 0] = 255
+    for instance in instances:
+        mask[instance.mask] = 255  # Заполняем найденные области
 
     return mask
 
-def validate_cellpose_with_real(save_path):
+def validate_celldetection_with_real(save_path):
     if not os.path.exists(save_path):
         os.makedirs(f'{save_path}/images')
 
@@ -83,22 +41,14 @@ def validate_cellpose_with_real(save_path):
                                'Cells area error %',
                                'Cells area error pixels'])
 
-    names = []
-    cells_num = []
-    aes = []
-    naes = []
-    ious = []
-    ious_one = []
-    areas = []
-    areas_errors = []
-    areas_errors_pixels = []
+    names, cells_num, aes, naes, ious, ious_one, areas, areas_errors, areas_errors_pixels = [], [], [], [], [], [], [], [], []
 
     # Отключаем интерактивный режим
     plt.ioff()
 
     for file in os.listdir(masks_path):
-        mask = detect_cell_cellpose(f'{images_path}/{file}')
-        img = cv2.imread(f'{masks_path}/{file}')
+        mask = detect_cell_celldetection(f'{images_path}/{file}')
+        img = cv2.imread(f'{masks_path}/{file}', cv2.IMREAD_GRAYSCALE)
 
         fig, axs = plt.subplots(2, 2, figsize=(10, 8))
 
@@ -107,10 +57,8 @@ def validate_cellpose_with_real(save_path):
         axs[0, 1].imshow(img, cmap='gray')
         axs[0, 1].set_title('Real')
 
-        mask_g = np.mean(mask, axis=2) if mask.ndim == 3 else mask
-        mask_g[mask_g != 0] = 255
-        img_g = np.mean(img, axis=2) if img.ndim == 3 else img
-        img_g[img_g != 0] = 255
+        mask_g = np.where(mask > 0, 255, 0)
+        img_g = np.where(img > 0, 255, 0)
 
         mask_objs = detect_cv2_objs(mask_g)
         real_objs = detect_cv2_objs(img_g)
@@ -133,10 +81,9 @@ def validate_cellpose_with_real(save_path):
         axs[1, 1].set_title('Real')
 
         fig.suptitle(f'abs err={ae_cells}, norm abs err={nae_cells:.3f}, IOU={iou_val}, IOU(cells)={iou_one_val}, cells area error={area_val}')
-        
         fig.tight_layout()
         fig.savefig(f'{save_path}/images/{file.split(".")[0]}_val.png')
-        plt.close(fig)  # Закрываем именно fig, чтобы избежать зависания
+        plt.close(fig)
 
         names.append(file.split(".")[0])
         cells_num.append(real_objs.shape[0])
@@ -160,8 +107,9 @@ def validate_cellpose_with_real(save_path):
 
     df.to_csv(f'{save_path}/metrics.csv', index=False)
 
-
+# Пути к данным
 images_path = 'C:/Projects/microalgae/segmentation/data/raw'
 masks_path = 'C:/Projects/microalgae/segmentation/data/marked'
-out_folder = 'C:/Projects/microalgae/segmentation/data/validation_cellpose'
-validate_cellpose_with_real(out_folder)
+out_folder = 'C:/Projects/microalgae/segmentation/data/validation_celldetection'
+
+validate_celldetection_with_real(out_folder)
