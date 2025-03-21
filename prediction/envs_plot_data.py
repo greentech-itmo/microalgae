@@ -1,7 +1,7 @@
 import pandas as pd
 import matplotlib.pyplot as plt
 
-df = pd.read_csv('growth_phases_data/full_data.csv', sep=',', decimal=',')
+df = pd.read_csv('../growth_phases_data/full_data.csv', sep=',', decimal=',')
 
 colors = ['r', 'g', 'b', 'm', 'y', 'pink']
 

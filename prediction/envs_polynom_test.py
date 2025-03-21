@@ -4,7 +4,7 @@ from matplotlib import pyplot as plt
 
 i = 1
 
-df = pd.read_csv('growth_phases_data/full_data.csv', sep=',', decimal=',')
+df = pd.read_csv('../growth_phases_data/full_data.csv', sep=',', decimal=',')
 sub_df = df[df['Эксперимент'] == i]
 daily_df_mean = sub_df.groupby('Сутки').mean()
 
