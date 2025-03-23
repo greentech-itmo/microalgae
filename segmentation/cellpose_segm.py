@@ -50,20 +50,14 @@ def area_error(predicted, target, percent=True):
         return abs(np.sum(predicted) - np.sum(target))
 
 def detect_cell_cellpose(image_path):
-    """
-    Выполняет сегментацию клеток на изображении с помощью модели Cellpose.
-    """
-    # Загружаем изображение
+
     img = cv2.imread(image_path)
-    img = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)  # Преобразуем в градации серого
+    img = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)  
 
-    # Загружаем предобученную модель Cellpose
-    model = models.Cellpose(model_type='cyto3')  # Можно попробовать 'nuclei' или 'bact'
+    model = models.Cellpose(model_type='cyto3')  
 
-    # Запускаем сегментацию
     masks, flows, styles, diams = model.eval(img, diameter=None, channels=[0, 0])
 
-    # Создаём бинарную маску
     mask = np.zeros_like(img)
     mask[masks > 0] = 255
 
@@ -93,7 +87,6 @@ def validate_cellpose_with_real(save_path):
     areas_errors = []
     areas_errors_pixels = []
 
-    # Отключаем интерактивный режим
     plt.ioff()
 
     for file in os.listdir(masks_path):
