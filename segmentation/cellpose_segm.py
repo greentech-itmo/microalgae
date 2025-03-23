@@ -132,7 +132,7 @@ def validate_cellpose_with_real(save_path):
             axs[1, 1].scatter(p[0], p[1], c='r', s=5)
         axs[1, 1].set_title('Real')
 
-        fig.suptitle(f'abs err={ae_cells}, norm abs err={nae_cells:.3f}, IOU={iou_val}, IOU(cells)={iou_one_val}, cells area error={area_val}')
+        fig.suptitle(f'Abs err={ae_cells}, IOU={iou_val}, IOU(cells)={iou_one_val}, cells area error={area_val}')
         
         fig.tight_layout()
         fig.savefig(f'{save_path}/images/{file.split(".")[0]}_val.png')
@@ -161,7 +161,9 @@ def validate_cellpose_with_real(save_path):
     df.to_csv(f'{save_path}/metrics.csv', index=False)
 
 
+
 images_path = 'C:/Projects/microalgae/segmentation/data/raw'
 masks_path = 'C:/Projects/microalgae/segmentation/data/marked'
 out_folder = 'C:/Projects/microalgae/segmentation/data/validation_cellpose'
 validate_cellpose_with_real(out_folder)
+# detect_cell_cellpose('C:/Projects/microalgae/segmentation/data/raw/BG-11-1-25-02-25-20-07-27.png')
